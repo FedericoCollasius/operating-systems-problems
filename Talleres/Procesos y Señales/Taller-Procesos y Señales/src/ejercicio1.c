@@ -9,10 +9,12 @@
 #include <time.h>
 
 int N; // Cantidad de procesos a crear < 10 
-int J; // 0 <= Numero maldito < N  
+int J; // 0 <= Numero maldito < N
 int generate_random_number(){
 	return (rand() % N);
 }
+
+pid_t childs[9];
 
 void sigterm_handler(int signum){
   sleep(1);
@@ -21,16 +23,23 @@ void sigterm_handler(int signum){
   pid_t pid = getpid();
   if(randnum == J){
     printf("Soy el proceso %d y me estoy por morir\n", pid); 
-    exit(1);
+    exit(0);
     }
 }
 
 void sigchild_handler(int signum){
-    sleep(1); 
-    printf("Soy el proceso padre y voy a matar al proceso hijo");
-    kill(SIGKILL, );
-}
+    pid_t pid;
+    int status;
 
+    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+        for(int i = 0; i < N; i++) {
+            if (childs[i] == pid) {
+                childs[i] = -1; 
+                break;
+            }
+        }
+    }
+}
 
 
 int main(int argc, char const *argv[]){
@@ -46,7 +55,6 @@ int main(int argc, char const *argv[]){
     signal(SIGCHLD, sigchild_handler);
 
     pid_t pid;  
-    pid_t childs[N];
     
     for(int i = 0; i < N; i++){
         sleep(1);
