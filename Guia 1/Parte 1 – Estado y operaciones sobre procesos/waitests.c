@@ -41,8 +41,7 @@ void test_2() {
 }
 
 int main() {
-    test_2();
-    return 0;
+    return 0; 
 }
 
 
