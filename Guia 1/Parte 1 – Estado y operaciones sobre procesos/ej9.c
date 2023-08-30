@@ -5,17 +5,17 @@
 #include <signal.h> // signals
 
 pid_t padre, hijo; 
+int i;
 
 void ping_handler(int signum){
-    printf("PING %d\n", getpid());
+    printf("PING. Soy el hijo con PID: %d\n", getpid());
     sleep(1); 
     kill(padre, SIGUSR2);
 }
 
 void pong_handler(int signum){
-    printf("PONG %d\n", getpid());
-    sleep(1); 
-    kill(hijo, SIGUSR1);
+    printf("PONG. Soy el padre con PID: %d\n", getpid()); 
+    i++;
 }
 
 int main(){
@@ -26,16 +26,16 @@ int main(){
 
     hijo = fork(); 
     if(hijo == 0){
-        sleep(1);
-        printf("Soy el proceso hijo\n");
         while(1){};
     } else {
-        printf("Soy el proceso padre y voy a empezar el ping pong\n");
-        for(int i = 0; i < 3; i++){
-            printf("Le mando una señal al proceso hijo\n");
+        printf("Soy el proceso padre y voy a empezar el ping pong.\n");
+        i = 0;
+        while(i < 3){
             kill(hijo, SIGUSR1);
-            sleep(1); 
-        }
+            printf("El valor de i: %d\n", i); 
+            sleep(1);
+        };
     }
+    kill(hijo, SIGKILL);
     return 0;
 }

@@ -1,0 +1,121 @@
+\documentclass[11pt]{article}
+
+% Paquetes
+% ---------------------------------------------------------------------------- %
+\usepackage[activeacute,spanish]{babel}
+\usepackage{indentfirst}
+\usepackage{amsmath}
+\usepackage{multicol}
+\usepackage{graphicx}
+% \usepackage{algorithmic}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage[a4paper]{geometry}
+\usepackage[utf8x]{inputenc}
+\usepackage{enumitem}
+
+\geometry{a4paper, bottom=1.3in, top=1.2in, left=.9in, right=.6in}
+
+\parskip .3em
+
+%%% Margenes %%%
+\setlength{\oddsidemargin}{-0.25in}
+\setlength{\textwidth}{6.65in}
+\setlength{\topmargin}{-0.55in}
+\setlength{\textheight}{9.1in}
+\setlength{\headheight}{11.72pt}
+
+\title{Taller de IPC}
+\author{Sistemas Operativos}
+\date{
+    29 de agosto de 2023\\ \vspace{.3em}
+    {\small Segundo cuatrimestre - 2023}
+}
+
+\begin{document}
+
+\maketitle
+
+\section{Ejercicios}
+
+En este taller se implementarán mecanismos de comunicación entre procesos mediante el uso de \texttt{pipes}.
+
+\subsection{Ejercicio 1: Mini \textsc{Shell}}
+
+Se pide implementar parte de la funcionalidad de un \texttt{shell} minimal. El mismo debe soportar comandos de dos formas:
+\begin{itemize}
+	\item Nombre de un programa junto con sus argumentos. Por ejemplo: \texttt{ls -al} 
+	\item Múltiples programas (con sus argumentos) comunicados por \texttt{|}. Por ejemplo: \texttt{ps aux | grep root | grep sbin}.
+\end{itemize}
+
+
+
+Para esto:
+\begin{enumerate}[label=\alph*)]
+	\item Partiendo del esqueleto provisto por la cátedra, implementar el programa \texttt{mini-shell} que recibe una cadena de texto que contiene comandos unidos con \texttt{pipes} y se comporte de la misma manera que lo haría cualquier otro \texttt{shell}\footnote{Se aconseja partir del Ejercicio 2 de la presentación ''Comunicación entre Procesos (IPC)'' y extenderlo a tres comandos encadenados.}. 
+	\\ Por ejemplo: \verb#./mini-shell 'du -h /home | head -n 10 | sort -rh#'. 
+	\\ \textbf{ATENCIÓN}: Recordar que se deben colocar comillas para que funcione correctamente.
+	\\ \textbf{Nota}: No se puede utilizar la función \texttt{system} para dicha tarea.
+	\\ \textbf{Nota2}: En el ejemplo usado, en caso que el directorio textbf{home} sea muy grande, puede ser que el proceso no termine con exito, pero aun asi se imprima igual el resultado.
+	\item ¿Por qué es importante cerrar los extremos de los \texttt{pipes} que no se utilizan?
+\end{enumerate}
+
+\subsection{Ejercicio 2: \textit{One ring to rule them all}}
+
+Se pide implementar un proceso que:
+\begin{enumerate}[label=\alph*)]
+	\item Realice un esquema de comunicación en forma de anillo para intercomunicar a sus procesos hijos (al menos tres), y 
+	\item Ejecute el protocolo de comunicación detallado a continuación:
+		\begin{itemize}
+			% \item En este esquema de anillo existen al menos tres procesos conectados formando un lazo cerrado. 
+			\item Cada uno de los procesos hijos debe comunicarse con exactamente dos procesos: su antecesor y su sucesor (visto desde el orden de creación de los mismos). El proceso actual recibe un mensaje del antecesor y envía un mensaje al sucesor. En este caso, dicha comunicación se realizará a través de \texttt{pipes}. 
+			\item Para comenzar la comunicación, el padre envía a alguno de los procesos hijo del anillo un número entero como mensaje a comunicar. Este proceso hijo será el encargado de generar un \textit{número secreto} (que solo él conoce) y, además, enviar el mensaje recibido del padre al siguiente proceso en el anillo. Luego de recibir un mensaje, cada proceso debe incrementar el valor recibido en uno y enviarlo al próximo proceso en el anillo. Esto se debe repetir hasta que el proceso inicial reciba de su antecesor un número que sea mayor o igual a su \textit{número secreto}.
+			\item % El programa inicial debe crear un conjunto de procesos hijos, a los que debe organizar para formar el anillo. 
+				Ejemplo: el hijo 1 recibe el mensaje inicial, lo incrementa, y se lo envía al hijo 2, éste lo vuelve a incrementar y se lo envía al hijo 3, y así sucesivamente hasta llegar al proceso inicial el cual dará pie a una nueva ronda en el anillo si el número recibido no supera su \textit{número secreto}. Caso contrario, no generará nuevos mensajes en el anillo pero sí enviará al proceso padre el último valor obtenido. El padre también deberá mostrar en la salida estándar el resultado final del proceso de comunicación.
+		\end{itemize}
+\end{enumerate}
+
+
+
+Se espera que el programa pueda ejecutarse como \texttt{./anillo <n> <c> <s>}, donde:  
+
+\begin{itemize}
+  \item \texttt{<n>} es la cantidad de procesos del anillo.
+  \item \texttt{<c>} es el valor del mensaje inicial.
+  \item \texttt{<s>} es el número de proceso que inicia la comunicación.
+\end{itemize}
+
+El número secreto \texttt{p} será generado aleatoriamente únicamente por el proceso distinguido, de manera que $\texttt{c} < \texttt{p}$.
+
+Antes de empezar:
+\begin{itemize}
+	\item Leer cuidadosamente los manuales de las funciones \texttt{read()} y \texttt{pipe()}
+	\item Responder: ¿Cuántos procesos hay que crear? ¿cuántos \texttt{pipes}?
+\end{itemize}
+
+\section{Notas útiles para la resolución del taller}
+
+\subsection{Preliminares}
+Para la resolución del taller es conveniente repasar la Clase Práctica 2 ''Comunicación entre Procesos (IPC)'', así como poder entender el código de los programas provistos junto con la misma y haberlos compilado y ejecutado por separado.
+
+\subsection{Consideraciones}
+
+Para tener en cuenta:
+
+\begin{itemize}
+	\item En un \textit{pipeline} todos los procesos se pueden ejecutar al mismo tiempo, es decir, de manera \textbf{concurrente}.
+	\item Es importante no dejar abiertos los \textit{file descriptors} (FD) de los \texttt{pipes} que no se utilicen. En este caso, ¿qué sucedería si no se cierran algunos FD de los \texttt{pipes}? ¿Por qué?
+	%\item En la sección de Clases Prácticas del Campus de la materia encontrarán información útil sobre este tema y también algunos ejemplos de código. 
+\end{itemize}
+
+\subsection{Manual (RTFM)}
+
+Recuerden que las páginas del manual son de mucha utilidad. Por ejemplo: 
+
+\begin{itemize}
+	\item Consultar el manual de una función: \texttt{man 2 pipe}, \texttt{man 2 read}, \texttt{man 2 dup}
+	\item Obtener una visión general de \textit{pipelines}: \texttt{man 7 pipe}, y 
+	\item Leer el manual del manual: \texttt{man man}
+\end{itemize}
+
+\end{document}
