@@ -6,6 +6,8 @@
 
 pid_t padre, hijo; 
 int i;
+int received = 0;
+char choice;
 
 void ping_handler(int signum){
     printf("PING. Soy el hijo con PID: %d\n", getpid());
@@ -16,6 +18,7 @@ void ping_handler(int signum){
 void pong_handler(int signum){
     printf("PONG. Soy el padre con PID: %d\n", getpid()); 
     i++;
+    received = 1;
 }
 
 int main(){
@@ -24,18 +27,27 @@ int main(){
     signal(SIGUSR1, ping_handler);
     signal(SIGUSR2, pong_handler);
 
-    hijo = fork(); 
-    if(hijo == 0){
-        while(1){};
-    } else {
-        printf("Soy el proceso padre y voy a empezar el ping pong.\n");
-        i = 0;
-        while(i < 3){
+    do {
+        hijo = fork(); 
+        if(hijo == 0){
+            while(1){};
+        } else {
+            printf("Soy el proceso padre y voy a empezar el ping pong.\n");
+            i = 0;
             kill(hijo, SIGUSR1);
-            printf("El valor de i: %d\n", i); 
-            sleep(1);
-        };
-    }
-    kill(hijo, SIGKILL);
+            while(i < 3){
+                while(received == 0){};
+                received = 0;
+                if (i < 3) {
+                    kill(hijo, SIGUSR1);
+                }
+            }
+            kill(hijo, SIGKILL);
+            wait(NULL); // Espera a que el hijo termine
+            printf("¿Queres terminar la ejecución? (s/n): ");
+            scanf(" %c", &choice);
+        }
+    } while (choice != 's' && choice != 'S');
+
     return 0;
 }
