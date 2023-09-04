@@ -24,15 +24,25 @@ long contarPares(long minimo, long maximo) {
   return cantidad;
 }
 
-void hijo(int fd[]){
+// Deberia pasarle todos los fds? 
+void hijo(int i, int fds[][2]){
+  // Cierra todos los descriptores de archivo, excepto los del proceso hijo actual
+  for(int j = 0; j < procesos; j++) {
+    if(j != i) {
+      close(fds[j][0]);
+      close(fds[j][1]);
+    }
+  }
   long minimo; 
-  read(fd[0], &minimo, sizeof(minimo)); 
+  read(fds[i][0], &minimo, sizeof(minimo)); 
   long maximo; 
-  read(fd[0], &maximo, sizeof(maximo));
+  read(fds[i][0], &maximo, sizeof(maximo));
+
   long cantidad = contarPares(minimo, maximo);
-  write(fd[1], &cantidad, sizeof(cantidad));
-  close(fd[0]); 
-  close(fd[1]);
+  write(fds[i][1], &cantidad, sizeof(cantidad));
+
+  close(fds[i][0]); 
+  close(fds[i][1]);
 }
 
 int main(int argc, char const* argv[]) {
@@ -58,7 +68,7 @@ int main(int argc, char const* argv[]) {
   int i = 0; 
   for(int i = 0; i < procesos; i++){
     if((pid = fork()) == 0){
-      hijo(fds[i]);
+      hijo(i, fds);
       exit(0);
     }
   }
