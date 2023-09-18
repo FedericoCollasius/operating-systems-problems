@@ -1,0 +1,1 @@
+Como tenemos 3 tipos de procesos que requieren distintos tiempos (P0 al ser de E/S deberia tener mas prioridad de atencion pero menos quantum y P2 al tener rafagas largas que requieren escribir en disco mas quantum pero menos prioridad) lo mejor seria darle prioridades al RR de manera tal que se pueda atender debidamente a cada tipo de proceso.
