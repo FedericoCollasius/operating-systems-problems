@@ -2,7 +2,7 @@
 #include <stdlib.h>  // exit()
 #include <unistd.h>  // fork() pipe() close()
 #include <sys/types.h> // pid_t 
-#include <signal.h> // SIGINT
+#include <signal.h> // SIGINT, SIGHUP S
 
 int pipe_fd[2];
 pid_t hijo; 
